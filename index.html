@@ -2,25 +2,37 @@
 <html lang="ckb" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>داونلۆدکرنا ڤیدیۆیان</title>
+    <title>داونلۆدکەرێ ڤیدیۆیان</title>
     <style>
         body { font-family: sans-serif; text-align: center; padding: 50px; background: #0f172a; color: white; }
-        input { padding: 10px; width: 80%; max-width: 400px; border-radius: 5px; border: none; }
+        input { padding: 10px; width: 80%; max-width: 400px; border-radius: 5px; border: none; margin-bottom: 10px;}
         button { padding: 10px 20px; background: #06b6d4; color: white; border: none; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
     <h1>داونلۆدکرنا ڤیدیۆیان</h1>
-    <input type="text" id="url" placeholder="لینکێ ڤیدیۆیێ ل ڤێرێ دابنێ...">
-    <button onclick="download()">دەستپێکرنا داونلۆدێ</button>
+    <input type="text" id="url" placeholder="لینکێ ڤیدیۆیێ دابنێ...">
+    <br>
+    <button onclick="downloadVideo()">داونلۆد بکە</button>
+    <p id="status"></p>
 
     <script>
-        async function download() {
+        async function downloadVideo() {
             const url = document.getElementById('url').value;
+            const status = document.getElementById('status');
             if(!url) return alert('تکایە لینکەکێ دابنێ');
             
-            // ئەڤە تەنێ نموونەیە، دڤێت API یا تە یا دروست بیت
-            alert('داونلۆد دێ دەست پێ کەت...');
+            status.innerText = "دێ لینکێ بۆ تە ئینم، چاوەڕێبە...";
+            
+            // نموونەیا بکارئینانا API-ەکێ
+            try {
+                // تێبینی: ئەڤ لینکە تەنێ نموونەیە، پێدڤییە تو API-ەکا کارا ل ڤێرێ بکار بینی
+                const response = await fetch('https://api.example.com/download?url=' + encodeURIComponent(url));
+                const data = await response.json();
+                status.innerText = "لینکێ ڤیدیۆیێ: " + data.download_url;
+            } catch (error) {
+                status.innerText = "ئاریشەک هات: API نەیا ئامادەیە یان لینکێ تە نەیا دروستە.";
+            }
         }
     </script>
 </body>
