@@ -1,18 +1,501 @@
 <!DOCTYPE html>
-<html lang="ckb" dir="rtl">
+<html lang="kmr" dir="rtl" id="htmlTag">
 <head>
     <meta charset="UTF-8">
-    <title>سناپ کورد - داونلۆدکەر</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="siteTitle">داونلۆدەرێ ڤیدیۆیان - بێ وەتەرمارک</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; background: #000; color: #fff; }
-        input { padding: 15px; width: 90%; border-radius: 10px; border: none; margin-bottom: 15px; }
-        button { padding: 15px 30px; background: #ff0050; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            min-height: 100vh;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .input-focus {
+            transition: all 0.3s ease;
+        }
+        .input-focus:focus {
+            border-color: #22d3ee;
+            box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.15);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #22d3ee, #3b82f6);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(34, 211, 238, 0.3);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        .btn-download {
+            background: linear-gradient(135deg, #34d399, #10b981);
+            transition: all 0.3s ease;
+        }
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52, 211, 153, 0.3);
+        }
+        .platform-badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+        .platform-badge:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(34, 211, 238, 0.1);
+            border-top-color: #22d3ee;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .success-badge {
+            background: rgba(52, 211, 153, 0.15);
+            border: 1px solid rgba(52, 211, 153, 0.3);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(34, 211, 238, 0.3);
+            border-radius: 10px;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+        }
+        @media (max-width: 480px) {
+            .feature-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            background: rgba(30, 30, 60, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            z-index: 999;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s ease;
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast.error {
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+        .toast.success {
+            border-color: rgba(52, 211, 153, 0.4);
+        }
     </style>
 </head>
 <body>
-    <h1>SnapKurd Downloader</h1>
-    <input type="text" id="url" placeholder="لینکێ ڤیدیۆیێ ل ڤێرێ دابنێ...">
-    <br>
-    <button onclick="window.open('https://snapsave.app/?url=' + document.getElementById('url').value, '_blank')">دەستپێکرنا داونلۆدێ</button>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Header -->
+    <header class="p-4 glass border-b border-white/5 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h1 class="text-2xl font-bold text-cyan-400 tracking-wide flex items-center gap-2">
+                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor"/>
+                    <path d="M15 9l-3 3-3-3M12 16V9" stroke="currentColor"/>
+                </svg>
+                Snap<span class="text-white">Kurd</span>
+            </h1>
+            <div class="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-xl border border-white/10">
+                <span class="text-sm opacity-60">🌐</span>
+                <select id="langSelect" onchange="changeLanguage(this.value)" class="bg-transparent text-sm text-gray-200 focus:outline-none cursor-pointer">
+                    <option value="bhd">کوردی (بەهدینی)</option>
+                    <option value="sor">کوردی (سۆرانی)</option>
+                    <option value="ara">العربية</option>
+                    <option value="en_us">English (US)</option>
+                    <option value="en_uk">English (UK)</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main class="flex-grow flex flex-col items-center justify-center px-4 py-12">
+        <div class="w-full max-w-3xl text-center space-y-8">
+
+            <!-- Heading -->
+            <div class="space-y-3">
+                <h2 id="mainHeading" class="text-3xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
+                    داونلۆدکرنا ڤیدیۆیێن <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">سۆشیال میدیایێ</span>
+                </h2>
+                <p id="mainDesc" class="text-gray-400 text-base md:text-lg max-w-xl mx-auto">
+                    لینکێ ڤیدیۆیێ دەنێ و ب بەرزترین کوالێتی و بێ وەتەرمارک داونلۆد بکە.
+                </p>
+            </div>
+
+            <!-- Platform Badges -->
+            <div class="feature-grid">
+                <div class="platform-badge px-4 py-2 rounded-xl text-sm text-gray-300 flex items-center justify-center gap-2">
+                    <span>📱</span> TikTok
+                </div>
+                <div class="platform-badge px-4 py-2 rounded-xl text-sm text-gray-300 flex items-center justify-center gap-2">
+                    <span>📷</span> Instagram
+                </div>
+                <div class="platform-badge px-4 py-2 rounded-xl text-sm text-gray-300 flex items-center justify-center gap-2">
+                    <span>👍</span> Facebook
+                </div>
+                <div class="platform-badge px-4 py-2 rounded-xl text-sm text-gray-300 flex items-center justify-center gap-2">
+                    <span>🐦</span> Twitter/X
+                </div>
+                <div class="platform-badge px-4 py-2 rounded-xl text-sm text-gray-300 flex items-center justify-center gap-2">
+                    <span>▶️</span> YouTube
+                </div>
+                <div class="platform-badge px-4 py-2 rounded-xl text-sm text-gray-300 flex items-center justify-center gap-2">
+                    <span>📌</span> Pinterest
+                </div>
+            </div>
+
+            <!-- Main Card -->
+            <div class="glass p-6 md:p-8 rounded-2xl border border-white/10 shadow-2xl">
+                <div class="flex flex-col md:flex-row gap-3">
+                    <input type="text" id="videoUrl" 
+                        placeholder="لینکێ ڤیدیۆیا TikTok, Instagram, Facebook, Shorts یان ستوری ل ڤێرێ دابنێ..."
+                        class="flex-grow px-5 py-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none input-focus text-right">
+                    <button onclick="downloadVideo()" id="btnText" 
+                        class="px-8 py-4 btn-primary font-bold rounded-xl text-white whitespace-nowrap cursor-pointer flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        دەرخستنا ڤیدیۆیێ
+                    </button>
+                </div>
+
+                <!-- Loading -->
+                <div id="loading" class="hidden mt-6 flex flex-col items-center gap-3">
+                    <div class="loader"></div>
+                    <span class="text-cyan-400 font-medium text-sm">⏳ چاوەڕێبە... ڤیدیۆ دهێتە ئامادەکرن...</span>
+                </div>
+
+                <!-- Result -->
+                <div id="result" class="hidden mt-6 p-4 rounded-xl bg-white/5 border border-white/10 fade-in">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="success-badge px-4 py-2 rounded-lg text-green-400 font-semibold text-sm flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M5 13l4 4L19 7" stroke="currentColor"/>
+                            </svg>
+                            <span id="successMsg">✨ ڤیدیۆ ب سەرکەفتن هاتە دۆزینەوە!</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+                        <a id="downloadBtn" href="#" target="_blank" download 
+                            class="px-8 py-3 btn-download text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition duration-200 flex items-center gap-2 w-full sm:w-auto justify-center">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            📥 ئێستا داونلۆد بکە
+                        </a>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-3 text-center">فایل دەخاتە داونلۆد، هەر چارەسەرێک نەبیت لینکەکە لە تابێکی نوێدا بکەرەوە</p>
+                </div>
+
+                <!-- Error placeholder (hidden by default) -->
+                <div id="errorMsg" class="hidden mt-4 text-red-400 text-sm font-medium"></div>
+            </div>
+
+            <!-- Features -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-400">
+                <div class="glass p-4 rounded-xl border border-white/5 text-center">
+                    <span class="text-2xl block mb-1">🎯</span>
+                    بێ وەتەرمارک
+                </div>
+                <div class="glass p-4 rounded-xl border border-white/5 text-center">
+                    <span class="text-2xl block mb-1">⚡</span>
+                    کوالێتی بەرز
+                </div>
+                <div class="glass p-4 rounded-xl border border-white/5 text-center">
+                    <span class="text-2xl block mb-1">🔄</span>
+                    ستوری و ڕیلز
+                </div>
+                <div class="glass p-4 rounded-xl border border-white/5 text-center">
+                    <span class="text-2xl block mb-1">🔒</span>
+                    پاراستن
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-gray-500 text-sm border-t border-white/5">
+        <p>© 2026 SnapKurd — داونلۆدەرێ ڤیدیۆیێن سۆشیال میدیایێ</p>
+    </footer>
+
+    <script>
+        // ============================================================
+        // TRANSLATIONS
+        // ============================================================
+        const translations = {
+            bhd: {
+                title: "داونلۆدەرێ ڤیدیۆیان - بێ وەتەرمارک",
+                heading: "داونلۆدکرنا ڤیدیۆیێن <span class='text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500'>سۆشیال میدیایێ</span>",
+                desc: "لینکێ ڤیدیۆیێ دەنێ و ب بەرزترین کوالێتی و بێ وەتەرمارک داونلۆد بکە.",
+                placeholder: "لینکێ ڤیدیۆیا TikTok, Instagram, Facebook, Shorts یان ستوری ل ڤێرێ دابنێ...",
+                btn: "دەرخستنا ڤیدیۆیێ",
+                loading: "⏳ چاوەڕێبە... ڤیدیۆ دهێتە ئامادەکرن...",
+                success: "✨ ڤیدیۆ ب سەرکەفتن هاتە دۆزینەوە!",
+                download: "📥 ئێستا داونلۆد بکە",
+                error: "⚠️ خەلەت! تکایە لینکەکە پشکنە یان دووبارە هەوڵ بدە.",
+                footer: "© 2026 SnapKurd — داونلۆدەرێ ڤیدیۆیێن سۆشیال میدیایێ"
+            },
+            sor: {
+                title: "داونلۆدەری ڤیدیۆ - بێ واتەرمارک",
+                heading: "داونلۆدکردنی ڤیدیۆیەکانی <span class='text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500'>سۆشیال میدیا</span>",
+                desc: "لینکی ڤیدیۆ بنێ و بە بەرزترین کوالیتی و بێ واتەرمارک داونلۆد بکە.",
+                placeholder: "لینکی ڤیدیۆی TikTok, Instagram, Facebook, Shorts یان ستوری لێرە بنێ...",
+                btn: "دەرخستنی ڤیدیۆ",
+                loading: "⏳ چاوەڕێ بە... ڤیدیۆ ئامادە دەکرێت...",
+                success: "✨ ڤیدیۆ بە سەرکەوتوویی دۆزرایەوە!",
+                download: "📥 ئێستا داونلۆد بکە",
+                error: "⚠️ هەڵە! تکایە لینکەکە پشکنە یان دووبارە هەوڵ بدە.",
+                footer: "© 2026 SnapKurd — داونلۆدەری ڤیدیۆیەکانی سۆشیال میدیا"
+            },
+            ara: {
+                title: "تحميل الفيديوهات - بدون علامة مائية",
+                heading: "تحميل فيديوهات <span class='text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500'>السوشيال ميديا</span>",
+                desc: "أرسل رابط الفيديو وقم بتحميله بأعلى جودة وبدون علامة مائية.",
+                placeholder: "ضع رابط فيديو TikTok، Instagram، Facebook، Shorts أو ستوري هنا...",
+                btn: "عرض الفيديو",
+                loading: "⏳ انتظر... جاري تجهيز الفيديو...",
+                success: "✨ تم العثور على الفيديو بنجاح!",
+                download: "📥 تحميل الآن",
+                error: "⚠️ خطأ! يرجى التحقق من الرابط أو المحاولة مرة أخرى.",
+                footer: "© 2026 SnapKurd — تحميل فيديوهات السوشيال ميديا"
+            },
+            en_us: {
+                title: "Video Downloader - No Watermark",
+                heading: "Download <span class='text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500'>Social Media</span> Videos",
+                desc: "Paste the video link and download in highest quality without any watermark.",
+                placeholder: "Paste TikTok, Instagram, Facebook, Shorts or Story link here...",
+                btn: "Fetch Video",
+                loading: "⏳ Please wait... Preparing video...",
+                success: "✨ Video found successfully!",
+                download: "📥 Download Now",
+                error: "⚠️ Error! Please check the link or try again.",
+                footer: "© 2026 SnapKurd — Social Media Video Downloader"
+            },
+            en_uk: {
+                title: "Video Downloader - No Watermark",
+                heading: "Download <span class='text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500'>Social Media</span> Videos",
+                desc: "Paste the video link and download in highest quality without any watermark.",
+                placeholder: "Paste TikTok, Instagram, Facebook, Shorts or Story link here...",
+                btn: "Fetch Video",
+                loading: "⏳ Please wait... Preparing video...",
+                success: "✨ Video found successfully!",
+                download: "📥 Download Now",
+                error: "⚠️ Error! Please check the link or try again.",
+                footer: "© 2026 SnapKurd — Social Media Video Downloader"
+            }
+        };
+
+        function changeLanguage(lang) {
+            const t = translations[lang] || translations.bhd;
+            document.title = t.title;
+            document.getElementById('mainHeading').innerHTML = t.heading;
+            document.getElementById('mainDesc').innerText = t.desc;
+            document.getElementById('videoUrl').placeholder = t.placeholder;
+            document.getElementById('btnText').innerHTML = t.btn;
+            document.getElementById('loading').innerHTML = `<div class="loader"></div><span class="text-cyan-400 font-medium text-sm">${t.loading}</span>`;
+            document.getElementById('successMsg').innerText = t.success;
+            document.getElementById('downloadBtn').innerHTML = t.download;
+            document.querySelector('footer p').innerText = t.footer;
+            // reset error if any
+            const errorEl = document.getElementById('errorMsg');
+            errorEl.classList.add('hidden');
+            errorEl.innerText = '';
+        }
+
+        // ============================================================
+        // TOAST SYSTEM
+        // ============================================================
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.className = 'toast', 300);
+            }, 4000);
+        }
+
+        // ============================================================
+        // DOWNLOAD FUNCTION - با API یا Cobalt
+        // ============================================================
+        async function downloadVideo() {
+            const urlInput = document.getElementById('videoUrl').value.trim();
+            const loading = document.getElementById('loading');
+            const resultDiv = document.getElementById('result');
+            const errorDiv = document.getElementById('errorMsg');
+            const downloadBtn = document.getElementById('downloadBtn');
+
+            // Reset states
+            resultDiv.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+            errorDiv.innerText = '';
+
+            // Validation
+            if (!urlInput) {
+                const currentLang = document.getElementById('langSelect').value;
+                const t = translations[currentLang] || translations.bhd;
+                showToast(t.error, 'error');
+                return;
+            }
+
+            // Basic URL validation
+            try {
+                new URL(urlInput);
+            } catch {
+                const currentLang = document.getElementById('langSelect').value;
+                const t = translations[currentLang] || translations.bhd;
+                showToast('⚠️ لینکێ نادروستە / Invalid URL', 'error');
+                return;
+            }
+
+            loading.classList.remove('hidden');
+            // Update loading text
+            const currentLang = document.getElementById('langSelect').value;
+            const t = translations[currentLang] || translations.bhd;
+            loading.innerHTML = `<div class="loader"></div><span class="text-cyan-400 font-medium text-sm">${t.loading}</span>`;
+
+            try {
+                // Cobalt API
+                const response = await fetch('https://api.cobalt.tools/api/json', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ url: urlInput })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Check for video URL
+                let videoUrl = null;
+                if (data.url) {
+                    videoUrl = data.url;
+                } else if (data.status === 'picker' && data.picker && data.picker.length > 0) {
+                    videoUrl = data.picker[0].url;
+                } else if (data.status === 'tunnel' && data.url) {
+                    videoUrl = data.url;
+                } else if (data.status === 'error') {
+                    throw new Error(data.text || 'Unknown error');
+                }
+
+                if (videoUrl) {
+                    loading.classList.add('hidden');
+                    resultDiv.classList.remove('hidden');
+                    downloadBtn.href = videoUrl;
+                    // Trigger download automatically
+                    window.open(videoUrl, '_blank');
+                    showToast('✅ ڤیدیۆ ئامادەیە! / Video ready!', 'success');
+                } else {
+                    throw new Error('No video URL found in response');
+                }
+
+            } catch (error) {
+                loading.classList.add('hidden');
+                const currentLang = document.getElementById('langSelect').value;
+                const t = translations[currentLang] || translations.bhd;
+                errorDiv.innerText = `⚠️ ${t.error} (${error.message})`;
+                errorDiv.classList.remove('hidden');
+                showToast(`❌ ${t.error}`, 'error');
+                console.error('Download error:', error);
+            }
+        }
+
+        // ============================================================
+        // KEYBOARD SHORTCUT - Enter to download
+        // ============================================================
+        document.getElementById('videoUrl').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                downloadVideo();
+            }
+        });
+
+        // ============================================================
+        // AUTO-DETECT LANGUAGE from browser (optional)
+        // ============================================================
+        (function autoDetectLang() {
+            const browserLang = navigator.language || 'en';
+            const langMap = {
+                'ckb': 'sor',
+                'ku': 'bhd',
+                'ar': 'ara',
+                'en': 'en_us',
+                'en-US': 'en_us',
+                'en-GB': 'en_uk'
+            };
+            const mapped = langMap[browserLang] || langMap[browserLang.split('-')[0]] || 'bhd';
+            // Only set if not already set by user
+            if (!localStorage.getItem('userLangSet')) {
+                document.getElementById('langSelect').value = mapped;
+                changeLanguage(mapped);
+            }
+            // Save when user changes
+            document.getElementById('langSelect').addEventListener('change', function() {
+                localStorage.setItem('userLangSet', 'true');
+            });
+        })();
+
+        // ============================================================
+        // INIT - Set default language
+        // ============================================================
+        (function init() {
+            const savedLang = document.getElementById('langSelect').value || 'bhd';
+            changeLanguage(savedLang);
+        })();
+    </script>
+
 </body>
 </html>
